@@ -1,0 +1,39 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+
+Vagrant.configure(2) do |config|
+ 
+  config.vm.box = "ubuntu/trusty64"
+  config.vm.box_url = "https://app.vagrantup.com/ubuntu/boxes/trusty64"
+
+   config.vm.provider "virtualbox" do |vb|
+  #   # Display the VirtualBox GUI when booting the machine
+  #   vb.gui = true
+  #
+  #   # Customize the amount of memory on the VM:
+  #   vb.memory = "1024"
+	vb.name = "devSigma"
+   end
+  config.vm.synced_folder "D:/project","/depoy/", #for windows
+	owner: "root", group: "root"
+
+  config.vm.provision "shell", inline: <<-SHELL
+    sudo apt-get update
+    sudo apt-get install -y software-properties-common curl
+    sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+    sudo echo 'deb https://apt.dockerproject.org/repo ubuntu-trusty main' > /etc/apt/sources.list.d/docker.list
+    sudo apt-get update
+    sudo apt-get purge lxc-docker
+    sudo apt-cache policy docker-engine
+    sudo apt-get install -y linux-image-extra-$(uname -r) 
+    sudo apt-get install -y docker-engine
+    sudo echo 'DOCKER_OPTS="-H tcp://127.0.0.1:4243 -H unix:///var/run/docker.sock"' >> /etc/default/docker
+    sudo service docker restart
+    sudo usermod -aG docker vagrant
+    echo 'export DOCKER_HOST=tcp://localhost:4243' >> /home/vagrant/.bashrc
+    curl -L https://github.com/docker/compose/releases/download/1.11.2/docker-compose-`uname -s`-`uname -m` -o docker-compose
+    sudo chmod +x docker-compose
+    sudo mv docker-compose /usr/local/bin
+  SHELL
+end
